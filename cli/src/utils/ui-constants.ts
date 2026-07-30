@@ -1,13 +1,15 @@
+import { palette } from '../design-system'
+
 import type { BorderCharacters } from '@opentui/core'
 
 /**
- * Dark text color for focused/inverted controls (dark label on the green
+ * Dark text color for focused/inverted controls (dark label on the violet
  * `theme.primary` fill). The themes set `background: 'transparent'`, so it
  * can't be used as an inverted-text color — a transparent foreground on the
- * green fill renders the label invisible. This near-black reads cleanly on the
- * bright green fill in both the dark and light themes.
+ * brand fill renders the label invisible. This near-black ink reads cleanly
+ * on the brand fill in both the dark and light themes.
  */
-export const INVERTED_CTA_FG = '#10131a'
+export const INVERTED_CTA_FG = palette.neutral[950]
 
 export const BORDER_CHARS: BorderCharacters = {
   topLeft: '╭',
