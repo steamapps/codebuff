@@ -1,0 +1,19 @@
+{
+  "name": "nexora-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell for the Nexora CLI",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  }
+}
