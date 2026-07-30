@@ -1,40 +1,29 @@
-# Freebuff
+# Nexora
 
 **The free coding agent.** No subscription. No configuration. Start in seconds.
 
-An AI coding agent that runs in your terminal — describe what you want, and Freebuff edits your code.
+An AI coding agent that runs in your terminal. Describe what you want, and Nexora edits your code.
 
 ## Install
 
 ```bash
-npm install -g freebuff
+npm install -g nexora
 ```
 
 ## Usage
 
 ```bash
 cd ~/my-project
-freebuff
-```
-
-## Project Structure
-
-```
-freebuff/
-├── cli/       # CLI build & npm release files
-└── web/       # Freebuff website
+nexora
 ```
 
 ## Building from Source
 
 ```bash
-# From the repo root
 bun freebuff/cli/build.ts 1.0.0
 ```
 
----
-
-For everything else — what Freebuff does, how it works, FAQ, and how it relates to Codebuff — see the [repo root README](../README.md). We keep that one up to date as the single source of truth.
+The existing source layout and runtime contracts remain unchanged; only the user-facing identity and presentation have been updated.
 
 ## License
 
