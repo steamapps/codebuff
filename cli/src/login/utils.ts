@@ -2,6 +2,8 @@
  * Utility functions for the login screen component
  */
 
+import { palette, rhythm, spacing } from '../design-system'
+
 /**
  * Calculates the relative luminance of a hex color to determine if it's light or dark mode
  */
@@ -56,9 +58,9 @@ export function formatUrl(url: string, maxWidth?: number): string[] {
 
 /**
  * Determines the color for a character based on its position relative to the sheen
- * Block characters use blockColor, shadow/border characters animate to accent green
+ * Block characters use blockColor, shadow/border characters animate to the brand accent
  * @param accentColor - The accent color to use for the sheen effect (typically theme.primary)
- * @param blockColor - The color for solid block characters (white for dark mode, black for light mode)
+ * @param blockColor - The color for solid block characters (light ink for dark mode, dark ink for light mode)
  * @param isReversing - Whether the sheen is in the reverse (unfill) phase
  */
 export function getSheenColor(
@@ -67,8 +69,8 @@ export function getSheenColor(
   sheenPosition: number,
   logoColor: string,
   shadowChars: Set<string>,
-  accentColor: string = '#9EFC62',
-  blockColor: string = '#ffffff',
+  accentColor: string = palette.brand[400],
+  blockColor: string = palette.neutral[0],
   isReversing: boolean = false,
 ): string {
   // Block characters use the specified block color
@@ -121,11 +123,11 @@ export function calculateResponsiveLayout(
   // Responsive breakpoints based on terminal width
   const isNarrow = terminalWidth < 60
 
-  // Dynamic spacing based on terminal size - compressed to prevent scrolling
-  const containerPadding = isVerySmall ? 0 : 1
-  const headerMarginTop = 0
-  const headerMarginBottom = isVerySmall ? 0 : 1
-  const sectionMarginBottom = isVerySmall ? 0 : 1
+  // Spacing comes from the Prism scale rather than inline magic numbers.
+  const containerPadding = isVerySmall ? spacing.none : spacing.xs
+  const headerMarginTop = rhythm.tight
+  const headerMarginBottom = isVerySmall ? rhythm.tight : rhythm.block
+  const sectionMarginBottom = isVerySmall ? rhythm.tight : rhythm.block
   const contentMaxWidth = Math.max(
     10,
     Math.min(terminalWidth - (containerPadding * 2 + 4), 80),
@@ -145,39 +147,5 @@ export function calculateResponsiveLayout(
     sectionMarginBottom,
     contentMaxWidth,
     maxUrlWidth,
-  }
-}
-
-/**
- * Calculates modal height based on terminal size and whether credentials are invalid
- */
-export function calculateModalDimensions(
-  terminalHeight: number,
-  hasInvalidCredentials: boolean,
-  defaultHeight = 24,
-  verticalMargin = 2,
-  maxBaseHeight = 22,
-  warningBannerHeight = 3,
-) {
-  // Calculate available terminal height
-  const availableHeight = terminalHeight || defaultHeight
-
-  // Calculate base modal height (terminal height minus margins, capped at max)
-  const baseModalHeight = Math.min(
-    availableHeight - verticalMargin,
-    maxBaseHeight,
-  )
-
-  // Add warning banner height if credentials are invalid
-  const totalContentHeight =
-    baseModalHeight + (hasInvalidCredentials ? warningBannerHeight : 0)
-
-  // Final modal height cannot exceed available terminal height
-  const modalHeight = Math.min(totalContentHeight, availableHeight)
-
-  return {
-    modalHeight,
-    baseModalHeight,
-    availableHeight,
   }
 }

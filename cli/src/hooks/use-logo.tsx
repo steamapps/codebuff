@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 
+import { palette } from '../design-system'
 import { LOGO, LOGO_SMALL, SHADOW_CHARS } from '../login/constants'
 import { parseLogoLines } from '../login/utils'
 import { IS_FREEBUFF } from '../utils/constants'
@@ -11,7 +12,7 @@ interface UseLogoOptions {
   availableWidth: number
   /**
    * Optional function to apply styling to each character (e.g., for sheen animation)
-   * If not provided, default coloring is applied (white blocks, accent shadows)
+   * If not provided, default coloring is applied (ink blocks, brand shadows)
    */
   applySheenToChar?: (char: string, charIndex: number, lineIndex: number) => React.ReactNode
   /**
@@ -19,11 +20,13 @@ interface UseLogoOptions {
    */
   textColor?: string
   /**
-   * Accent color for shadow/border characters (defaults to acid green #9EFC62)
+   * Accent color for shadow/border characters.
+   * Defaults to the Prism brand violet (`palette.brand[400]`).
    */
   accentColor?: string
   /**
-   * Block color for solid block characters (white for dark mode, black for light mode)
+   * Block color for solid block characters (lightest ink in dark mode,
+   * darkest ink in light mode)
    */
   blockColor?: string
   /**
@@ -65,8 +68,8 @@ export const useLogo = ({
   availableWidth,
   applySheenToChar,
   textColor,
-  accentColor = '#9EFC62',
-  blockColor = '#ffffff',
+  accentColor = palette.brand[400],
+  blockColor = palette.neutral[0],
   maxHeight,
 }: UseLogoOptions): LogoResult => {
   // The ASCII art (full and small) is 6 lines tall. If the caller can't spare
@@ -128,7 +131,7 @@ export const useLogo = ({
       if (char === ' ' || char === '\n') {
         return <span key={charIndex}>{char}</span>
       }
-      // Block characters use blockColor (white in dark mode, black in light mode)
+      // Block characters use blockColor (light ink in dark mode, dark ink in light mode)
       if (char === '█') {
         return <span key={charIndex} fg={blockColor}>{char}</span>
       }
