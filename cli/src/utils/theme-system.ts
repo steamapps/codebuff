@@ -4,6 +4,8 @@ import { dirname, join } from 'path'
 
 import { getCliEnv } from './env'
 
+import { ansiFallback, palette, prismThemes } from '../design-system'
+
 import type { MarkdownPalette } from './markdown-renderer'
 import type { CliEnv } from '../types/env'
 import type {
@@ -25,21 +27,21 @@ export function supportsTruecolor(env: CliEnv = getCliEnv()): boolean {
   if (_truecolorSupport !== null) {
     return _truecolorSupport
   }
-  
+
   const termProgram = env.TERM_PROGRAM?.toLowerCase() ?? ''
-  
+
   // Terminal.app (Apple_Terminal) does NOT support truecolor - only 256 colors
   if (termProgram === 'apple_terminal') {
     _truecolorSupport = false
     return false
   }
-  
+
   const colorterm = env.COLORTERM?.toLowerCase()
   if (colorterm === 'truecolor' || colorterm === '24bit') {
     _truecolorSupport = true
     return true
   }
-  
+
   // Some terminals that are known to support truecolor
   const truecolorTerminals = [
     'iterm.app',
@@ -50,35 +52,38 @@ export function supportsTruecolor(env: CliEnv = getCliEnv()): boolean {
     'ghostty',
     'vscode',
   ]
-  
-  if (truecolorTerminals.some(t => termProgram.includes(t))) {
+
+  if (truecolorTerminals.some((t) => termProgram.includes(t))) {
     _truecolorSupport = true
     return true
   }
-  
+
   // Check TERM for known truecolor-capable values
   const term = env.TERM?.toLowerCase() ?? ''
   if (term.includes('truecolor') || term.includes('24bit')) {
     _truecolorSupport = true
     return true
   }
-  
+
   // xterm-kitty, alacritty, etc.
-  if (term === 'xterm-kitty' || term === 'alacritty' || term.includes('ghostty')) {
+  if (
+    term === 'xterm-kitty' ||
+    term === 'alacritty' ||
+    term.includes('ghostty')
+  ) {
     _truecolorSupport = true
     return true
   }
-  
+
   _truecolorSupport = false
   return false
 }
 
-
-
 /**
  * Get the block color for the logo based on theme and terminal capabilities.
- * In dark mode: white (#ffffff or 'white')
- * In light mode: black (#000000 or 'black')
+ * In dark mode: lightest ink. In light mode: darkest ink.
+ * Values come from the Prism design system so the wordmark always matches
+ * the rest of the interface.
  */
 export function getLogoBlockColor(
   themeName: ThemeName,
@@ -86,25 +91,24 @@ export function getLogoBlockColor(
 ): string {
   const isTruecolor = supportsTruecolor(env)
   if (themeName === 'dark') {
-    return isTruecolor ? '#ffffff' : 'white'
+    return isTruecolor ? palette.neutral[0] : ansiFallback.inkDark
   }
-  return isTruecolor ? '#000000' : 'black'
+  return isTruecolor ? palette.neutral[950] : ansiFallback.inkLight
 }
 
 /**
  * Get the accent color for the logo based on theme and terminal capabilities.
- * Returns the primary green color with appropriate fallback.
+ * Returns the Prism brand violet with an appropriate 256-color fallback.
  */
 export function getLogoAccentColor(
   themeName: ThemeName,
   env: CliEnv = getCliEnv(),
 ): string {
   const isTruecolor = supportsTruecolor(env)
-  // The primary green color - 'lime' is CSS bright green
   if (themeName === 'dark') {
-    return isTruecolor ? '#9EFC62' : 'lime'
+    return isTruecolor ? palette.brand[400] : ansiFallback.brandDark
   }
-  return isTruecolor ? '#65A83E' : 'green'
+  return isTruecolor ? palette.brand[600] : ansiFallback.brandLight
 }
 
 const IDE_THEME_INFERENCE = {
@@ -205,9 +209,7 @@ const collectExistingPaths = (candidates: string[]): string[] => {
   return [...seen]
 }
 
-const resolveVSCodeSettingsPaths = (
-  env: CliEnv = getCliEnv(),
-): string[] => {
+const resolveVSCodeSettingsPaths = (env: CliEnv = getCliEnv()): string[] => {
   const settings: string[] = []
   const home = homedir()
 
@@ -233,9 +235,7 @@ const resolveVSCodeSettingsPaths = (
   return settings
 }
 
-const resolveJetBrainsLafPaths = (
-  env: CliEnv = getCliEnv(),
-): string[] => {
+const resolveJetBrainsLafPaths = (env: CliEnv = getCliEnv()): string[] => {
   const candidates: string[] = []
 
   // Check IDE config dirs
@@ -283,9 +283,7 @@ const resolveJetBrainsLafPaths = (
   return candidates
 }
 
-const resolveZedSettingsPaths = (
-  env: CliEnv = getCliEnv(),
-): string[] => {
+const resolveZedSettingsPaths = (env: CliEnv = getCliEnv()): string[] => {
   const home = homedir()
   const paths: string[] = []
 
@@ -381,9 +379,7 @@ const extractJetBrainsTheme = (content: string): ThemeName | null => {
   return null
 }
 
-const isVSCodeFamilyTerminal = (
-  env: CliEnv = getCliEnv(),
-): boolean => {
+const isVSCodeFamilyTerminal = (env: CliEnv = getCliEnv()): boolean => {
   if (env.TERM_PROGRAM?.toLowerCase() === 'vscode') {
     return true
   }
@@ -403,9 +399,7 @@ const isVSCodeFamilyTerminal = (
   return false
 }
 
-const isJetBrainsTerminal = (
-  env: CliEnv = getCliEnv(),
-): boolean => {
+const isJetBrainsTerminal = (env: CliEnv = getCliEnv()): boolean => {
   if (env.TERMINAL_EMULATOR?.toLowerCase().includes('jetbrains')) {
     return true
   }
@@ -423,16 +417,12 @@ const isJetBrainsTerminal = (
   return false
 }
 
-const isZedTerminal = (
-  env: CliEnv = getCliEnv(),
-): boolean => {
+const isZedTerminal = (env: CliEnv = getCliEnv()): boolean => {
   const termProgram = env.TERM_PROGRAM?.toLowerCase()
   return termProgram === 'zed' || false
 }
 
-const detectVSCodeTheme = (
-  env: CliEnv = getCliEnv(),
-): ThemeName | null => {
+const detectVSCodeTheme = (env: CliEnv = getCliEnv()): ThemeName | null => {
   if (!isVSCodeFamilyTerminal(env)) {
     return null
   }
@@ -457,8 +447,7 @@ const detectVSCodeTheme = (
     }
   }
 
-  const themeKindEnv =
-    env.VSCODE_THEME_KIND ?? env.VSCODE_COLOR_THEME_KIND
+  const themeKindEnv = env.VSCODE_THEME_KIND ?? env.VSCODE_COLOR_THEME_KIND
   if (themeKindEnv) {
     const normalized = themeKindEnv.trim().toLowerCase()
     if (normalized === 'dark' || normalized === 'hc') return 'dark'
@@ -468,9 +457,7 @@ const detectVSCodeTheme = (
   return null
 }
 
-const detectJetBrainsTheme = (
-  env: CliEnv = getCliEnv(),
-): ThemeName | null => {
+const detectJetBrainsTheme = (env: CliEnv = getCliEnv()): ThemeName | null => {
   if (!isJetBrainsTerminal(env)) {
     return null
   }
@@ -573,9 +560,7 @@ const extractZedTheme = (content: string): ThemeName | null => {
   return null
 }
 
-const detectZedTheme = (
-  env: CliEnv = getCliEnv(),
-): ThemeName | null => {
+const detectZedTheme = (env: CliEnv = getCliEnv()): ThemeName | null => {
   if (!isZedTerminal(env)) {
     return null
   }
@@ -611,24 +596,20 @@ const detectZedTheme = (
   return null
 }
 
-export const detectIDETheme = (
-  env: CliEnv = getCliEnv(),
-): ThemeName | null => {
+export const detectIDETheme = (env: CliEnv = getCliEnv()): ThemeName | null => {
   const theme = detectVSCodeTheme(env)
   if (theme) return theme
-  
+
   const jbTheme = detectJetBrainsTheme(env)
   if (jbTheme) return jbTheme
-  
+
   const zedTheme = detectZedTheme(env)
   if (zedTheme) return zedTheme
-  
+
   return null
 }
 
-export const getIDEThemeConfigPaths = (
-  env: CliEnv = getCliEnv(),
-): string[] => {
+export const getIDEThemeConfigPaths = (env: CliEnv = getCliEnv()): string[] => {
   const paths = new Set<string>()
   for (const path of resolveVSCodeSettingsPaths(env)) {
     paths.add(path)
@@ -872,138 +853,14 @@ export function detectPlatformTheme(): ThemeName {
   return 'dark'
 }
 
-const DEFAULT_CHAT_THEMES: Record<ThemeName, ChatTheme> = {
-  dark: {
-    name: 'dark',
-    // Core semantic colors
-    primary: '#9EFC62',
-    secondary: '#a3aed0',
-    success: '#22c55e',
-    error: '#ef4444',
-    warning: '#FFA500',
-    info: '#9EFC62',
-    link: '#3B82F6',
-    directory: '#9CA3AF',
-
-    // Neutral scale
-    foreground: '#f1f5f9',
-    background: 'transparent',
-    muted: '#acb3bf',
-    border: '#536175',
-    surface: '#202327',
-    surfaceHover: '#334155',
-
-    // Context-specific
-    aiLine: '#6b7280',
-    userLine: '#9EFC62',
-
-    // Agent backgrounds
-    agentToggleHeaderBg: '#f97316',
-    agentToggleExpandedBg: '#1d4ed8',
-    agentFocusedBg: '#334155',
-    agentContentBg: '#000000',
-    inputFg: '#f5f5f5',
-    inputFocusedFg: '#ffffff',
-
-    // Mode toggles
-    modeFastBg: '#f97316',
-    modeFastText: '#f97316',
-    modeMaxBg: '#dc2626',
-    modeMaxText: '#dc2626',
-    modePlanBg: '#1e40af',
-    modePlanText: '#1e40af',
-
-    // Image card
-    imageCardBorder: '#6B7280',
-
-    // Markdown
-    markdown: {
-      // Dark mode: slightly darker gray for less brightness
-      codeBackground: '#374151',
-      codeHeaderFg: '#5b647a',
-      inlineCodeFg: '#FF8534',
-      codeTextFg: '#f1f5f9',
-      headingFg: {
-        1: '#facc15',
-        2: '#facc15',
-        3: '#facc15',
-        4: '#facc15',
-        5: '#facc15',
-        6: '#facc15',
-      },
-      listBulletFg: '#a3aed0',
-      blockquoteBorderFg: '#334155',
-      blockquoteTextFg: '#e2e8f0',
-      dividerFg: '#283042',
-      codeMonochrome: false,
-    },
-  },
-  light: {
-    name: 'light',
-    // Core semantic colors
-    primary: '#65A83E',
-    secondary: '#6b7280',
-    success: '#059669',
-    error: '#ef4444',
-    warning: '#F59E0B',
-    info: '#65A83E',
-    link: '#2563EB',
-    directory: '#6B7280',
-
-    // Neutral scale
-    foreground: '#111827',
-    background: 'transparent',
-    muted: '#6b7280',
-    border: '#d1d5db',
-    surface: '#f3f4f6',
-    surfaceHover: '#e5e7eb',
-
-    // AI/User context
-    aiLine: '#6b7280',
-    userLine: '#65A83E',
-
-    // Agent context
-    agentToggleHeaderBg: '#ea580c',
-    agentToggleExpandedBg: '#1d4ed8',
-    agentFocusedBg: '#f3f4f6',
-    agentContentBg: '#ffffff',
-    inputFg: '#111827',
-    inputFocusedFg: '#000000',
-
-    // Mode toggles
-    modeFastBg: '#f97316',
-    modeFastText: '#f97316',
-    modeMaxBg: '#dc2626',
-    modeMaxText: '#dc2626',
-    modePlanBg: '#1e40af',
-    modePlanText: '#1e40af',
-
-    // Image card
-    imageCardBorder: '#6B7280',
-
-    // Markdown
-    markdown: {
-      // Light mode: lighter gray background so inline code feels airy
-      codeBackground: '#f3f4f6',
-      codeHeaderFg: '#6b7280',
-      inlineCodeFg: '#C45A00',
-      codeTextFg: '#111827',
-      headingFg: {
-        1: '#dc2626',
-        2: '#dc2626',
-        3: '#dc2626',
-        4: '#dc2626',
-        5: '#dc2626',
-        6: '#dc2626',
-      },
-      listBulletFg: '#6b7280',
-      blockquoteBorderFg: '#d1d5db',
-      blockquoteTextFg: '#374151',
-      dividerFg: '#e5e7eb',
-      codeMonochrome: false,
-    },
-  },
-}
+/**
+ * Default themes for the CLI.
+ *
+ * The raw values live in the Prism design system (`src/design-system`).
+ * This module only wires them into the runtime theme pipeline so that a
+ * change of visual identity never requires touching detection logic.
+ */
+const DEFAULT_CHAT_THEMES: Record<ThemeName, ChatTheme> = prismThemes
 
 export const chatThemes = {
   dark: DEFAULT_CHAT_THEMES.dark,
@@ -1239,11 +1096,11 @@ export function enableManualThemeRefresh() {
 
 /**
  * OSC Terminal Theme Detection
- * 
+ *
  * OSC detection is now run synchronously at app startup in index.tsx,
  * BEFORE OpenTUI is initialized. This avoids stdin conflicts since
  * OpenTUI hasn't attached its listeners yet.
- * 
+ *
  * The detected theme is stored via setOscDetectedTheme() and retrieved
  * via getOscDetectedTheme() when building the theme.
  */
