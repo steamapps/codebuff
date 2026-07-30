@@ -4,7 +4,7 @@ import { palette } from '../design-system'
 import { LOGO, LOGO_SMALL, SHADOW_CHARS } from '../login/constants'
 import { parseLogoLines } from '../login/utils'
 import { IS_FREEBUFF } from '../utils/constants'
-import { NEXORA_NAME } from '../utils/brand'
+import { NEXORA_NAME, NEXORA_SHORT_NAME } from '../utils/brand'
 
 interface UseLogoOptions {
   availableWidth: number
