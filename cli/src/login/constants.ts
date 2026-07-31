@@ -1,8 +1,16 @@
-import { env, IS_DEV } from '@codebuff/common/env'
+import { env } from '@codebuff/common/env'
 import { IS_FREEBUFF } from '../utils/constants'
 
 export const WEBSITE_URL = env.NEXT_PUBLIC_CODEBUFF_APP_URL
-const NEXORA_WEB_URL = IS_DEV ? 'http://localhost:3002' : (env.NEXT_PUBLIC_FREEBUFF_APP_URL ?? env.NEXT_PUBLIC_CODEBUFF_APP_URL)
+
+// Local auth is opt-in only. A generic dev environment must not silently point
+// the free variant at localhost, because the public CLI is expected to connect
+// to Freebuff's hosted auth service.
+const USE_LOCAL_FREEBUFF_AUTH = process.env.FREEBUFF_LOCAL_DEV === 'true'
+const NEXORA_WEB_URL = USE_LOCAL_FREEBUFF_AUTH
+  ? 'http://localhost:3002'
+  : (env.NEXT_PUBLIC_FREEBUFF_APP_URL ?? 'https://freebuff.com')
+
 export const LOGIN_WEBSITE_URL = IS_FREEBUFF ? NEXORA_WEB_URL : WEBSITE_URL
 
 const LOGO_CODEBUFF = `
@@ -11,7 +19,7 @@ const LOGO_CODEBUFF = `
  ██║     ██║   ██║██║  ██║█████╗  ██████╔╝██║   ██║█████╗  █████╗
  ██║     ██║   ██║██║  ██║██╔══╝  ██╔══██╗██║   ██║██╔══╝  ██╔══╝
  ╚██████╗╚██████╔╝██████╔╝███████╗██████╔╝╚██████╔╝██║     ██║
-  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝
+  ╚═════╝ ╚═════╝ ╚══════╝╚═════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝
 `
 
 const LOGO_SMALL_CODEBUFF = `
